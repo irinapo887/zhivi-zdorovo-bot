@@ -120,7 +120,7 @@ async def send_to_telegram(text: str, image_url: str | None):
                     "chat_id": TELEGRAM_CHANNEL,
                     "photo": image_url,
                     "caption": text,
-                    "parse_mode": "HTML",
+                    
                 },
             )
         else:
@@ -129,7 +129,7 @@ async def send_to_telegram(text: str, image_url: str | None):
                 json={
                     "chat_id": TELEGRAM_CHANNEL,
                     "text": text,
-                    "parse_mode": "HTML",
+                    
                 },
             )
 
