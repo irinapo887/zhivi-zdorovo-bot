@@ -61,21 +61,16 @@ async def genereaza_postare(tema_tuple: tuple) -> str:
         "новости": "🔹 Новости в мире здоровья",
     }.get(tip, "🔸 Здоровье")
 
-    prompt = f"""Ты эксперт по натуропатии, народной медицине и здоровому образу жизни.
-Напиши пост для Telegram-канала в рубрике "{tip_formatat}" на тему: {tema}
+    prompt = f"""Ты эксперт по натуропатии и здоровому образу жизни.
+Напиши короткий пост для Telegram на тему: {tema}
 
-Правила:
-- Язык: русский
-- Начни пост с эмодзи и названия рубрики: {tip_formatat}
-- Длина: 3-4 абзаца, максимум 200 слов
-- Первая строка после рубрики должна захватить внимание
-- Используй 2-3 эмодзи органично в тексте
-- Дай 1-2 конкретных практических совета
-- В конце добавь 4-5 хэштегов: #здоровье #натуропатия #народнаямедицина и другие релевантные
-- Без markdown-форматирования (без звёздочек и подчёркиваний)
-- Пиши тепло и доступно, как мудрый друг
+СТРОГО соблюдай структуру:
+1. Первая строка: {tip_formatat}
+2. Основной текст: максимум 150 слов, 2-3 абзаца, 2 эмодзи
+3. Последняя строка ОБЯЗАТЕЛЬНО: #здоровье #натуропатия #народнаямедицина #ЖивиЗдорово #здоровыйобразжизни
 
-Напиши только пост, без объяснений."""
+Без markdown. Пиши тепло и доступно.
+Напиши только пост."""
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
 
@@ -84,13 +79,17 @@ async def genereaza_postare(tema_tuple: tuple) -> str:
             url,
             json={
                 "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {"maxOutputTokens": 1024, "temperature": 0.9},
+                "generationConfig": {"maxOutputTokens": 600, "temperature": 0.9},
             },
         )
         data = response.json()
         if "candidates" not in data:
             raise Exception(f"Gemini error: {data}")
-        return data["candidates"][0]["content"]["parts"][0]["text"]
+        text = data["candidates"][0]["content"]["parts"][0]["text"]
+        # Asigura ca hashtagurile sunt incluse
+        if "#здоровье" not in text:
+            text += "\n\n#здоровье #натуропатия #народнаямедицина #ЖивиЗдорово #здоровыйобразжизни"
+        return text
 
 
 async def get_unsplash_image(query: str) -> str | None:
