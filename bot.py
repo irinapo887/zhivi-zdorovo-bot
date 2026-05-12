@@ -91,7 +91,7 @@ async def genereaza_postare(tema_tuple: tuple) -> str:
             url,
             json={
                 "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {"maxOutputTokens": 800, "temperature": 0.9},
+                "generationConfig": {"maxOutputTokens": 2048, "temperature": 0.9},
             },
         )
         data = response.json()
