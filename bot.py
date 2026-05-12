@@ -62,15 +62,27 @@ async def genereaza_postare(tema_tuple: tuple) -> str:
     }.get(tip, "🔸 Здоровье")
 
     prompt = f"""Ты эксперт по натуропатии и здоровому образу жизни.
-Напиши короткий пост для Telegram на тему: {tema}
+Напиши пост для Telegram-канала на тему: {tema}
 
-СТРОГО соблюдай структуру:
-1. Первая строка: {tip_formatat}
-2. Основной текст: максимум 150 слов, 2-3 абзаца, 2 эмодзи
-3. Последняя строка ОБЯЗАТЕЛЬНО: #здоровье #натуропатия #народнаямедицина #ЖивиЗдорово #здоровыйобразжизни
+Структура поста (строго соблюдай):
+Строка 1: {tip_formatat}
+Строка 2: (пустая)
+Строка 3-4: Цепляющий вопрос или факт — 1-2 предложения
+Строка 5: (пустая)
+Строки 6-8: Основная информация — 3-4 предложения с конкретными советами
+Строка 9: (пустая)
+Строки 10-11: Практический совет что сделать сегодня — 2 предложения с эмодзи
+Строка 12: (пустая)
+Последняя строка: #здоровье #натуропатия #народнаямедицина #ЖивиЗдорово #здоровыйобразжизни
 
-Без markdown. Пиши тепло и доступно.
-Напиши только пост."""
+Требования:
+- Язык: русский
+- Длина текста: 180-220 слов
+- Эмодзи: 3-4 штуки в тексте
+- Без markdown (без звёздочек)
+- Тон: тёплый, как мудрый друг
+
+Напиши только пост, без объяснений."""
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
 
@@ -79,14 +91,13 @@ async def genereaza_postare(tema_tuple: tuple) -> str:
             url,
             json={
                 "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {"maxOutputTokens": 600, "temperature": 0.9},
+                "generationConfig": {"maxOutputTokens": 800, "temperature": 0.9},
             },
         )
         data = response.json()
         if "candidates" not in data:
             raise Exception(f"Gemini error: {data}")
         text = data["candidates"][0]["content"]["parts"][0]["text"]
-        # Asigura ca hashtagurile sunt incluse
         if "#здоровье" not in text:
             text += "\n\n#здоровье #натуропатия #народнаямедицина #ЖивиЗдорово #здоровыйобразжизни"
         return text
