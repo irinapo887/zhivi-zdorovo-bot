@@ -61,28 +61,15 @@ async def genereaza_postare(tema_tuple: tuple) -> str:
         "новости": "🔹 Новости в мире здоровья",
     }.get(tip, "🔸 Здоровье")
 
-    prompt = f"""Ты эксперт по натуропатии и здоровому образу жизни.
-Напиши пост для Telegram-канала на тему: {tema}
+    prompt = f"""Напиши короткий Telegram-пост на русском языке. Тема: {tema}.
 
-Структура поста (строго соблюдай):
-Строка 1: {tip_formatat}
-Строка 2: (пустая)
-Строка 3-4: Цепляющий вопрос или факт — 1-2 предложения
-Строка 5: (пустая)
-Строки 6-8: Основная информация — 3-4 предложения с конкретными советами
-Строка 9: (пустая)
-Строки 10-11: Практический совет что сделать сегодня — 2 предложения с эмодзи
-Строка 12: (пустая)
-Последняя строка: #здоровье #натуропатия #народнаямедицина #ЖивиЗдорово #здоровыйобразжизни
+Пост должен содержать ровно 4 части:
+1. Заголовок: {tip_formatat}
+2. Один абзац (3-4 предложения) с полезной информацией по теме
+3. Один конкретный совет что сделать сегодня (1-2 предложения с эмодзи)
+4. Хэштеги: #здоровье #натуропатия #народнаямедицина #ЖивиЗдорово #здоровыйобразжизни
 
-Требования:
-- Язык: русский
-- Длина текста: 180-220 слов
-- Эмодзи: 3-4 штуки в тексте
-- Без markdown (без звёздочек)
-- Тон: тёплый, как мудрый друг
-
-Напиши только пост, без объяснений."""
+Общая длина: не более 100 слов. Без markdown."""
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
 
@@ -91,7 +78,7 @@ async def genereaza_postare(tema_tuple: tuple) -> str:
             url,
             json={
                 "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {"maxOutputTokens": 2048, "temperature": 0.9},
+                "generationConfig": {"maxOutputTokens": 512, "temperature": 0.8},
             },
         )
         data = response.json()
@@ -149,7 +136,7 @@ async def posteaza():
         query = get_unsplash_query(tema_tuple)
         image_url = await get_unsplash_image(query)
         await send_to_telegram(text, image_url)
-        print(f"[{datetime.now()}] Postat cu succes! Imagine: {'da' if image_url else 'nu'}")
+        print(f"[{datetime.now()}] Postat cu succes!")
     except Exception as e:
         print(f"[{datetime.now()}] Eroare: {e}")
 
@@ -157,15 +144,11 @@ async def posteaza():
 async def main():
     tz = pytz.timezone(TIMEZONE)
     scheduler = AsyncIOScheduler(timezone=tz)
-
     scheduler.add_job(posteaza, "cron", hour=9, minute=0)
     scheduler.add_job(posteaza, "cron", hour=19, minute=0)
-
     scheduler.start()
     print(f"Bot pornit! Postare la 09:00 si 19:00 ({TIMEZONE})")
-
     await posteaza()
-
     try:
         while True:
             await asyncio.sleep(3600)
