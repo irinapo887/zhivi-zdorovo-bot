@@ -61,15 +61,18 @@ async def genereaza_postare(tema_tuple: tuple) -> str:
         "новости": "🔹 Новости в мире здоровья",
     }.get(tip, "🔸 Здоровье")
 
-    prompt = f"""Напиши короткий Telegram-пост на русском языке. Тема: {tema}.
+    prompt = f"""Напиши Telegram-пост на русском языке на тему: {tema}
 
-Пост должен содержать ровно 4 части:
-1. Заголовок: {tip_formatat}
-2. Один абзац (3-4 предложения) с полезной информацией по теме
-3. Один конкретный совет что сделать сегодня (1-2 предложения с эмодзи)
-4. Хэштеги: #здоровье #натуропатия #народнаямедицина #ЖивиЗдорово #здоровыйобразжизни
+Формат:
+{tip_formatat}
 
-Общая длина: не более 100 слов. Без markdown."""
+[2-3 предложения с полезной информацией по теме. Каждое предложение заканчивай точкой.]
+
+[1 практический совет с эмодзи. Заканчивай точкой.]
+
+#здоровье #натуропатия #народнаямедицина #ЖивиЗдорово #здоровыйобразжизни
+
+Пиши только пост. Без markdown. Без звёздочек."""
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
 
@@ -78,7 +81,7 @@ async def genereaza_postare(tema_tuple: tuple) -> str:
             url,
             json={
                 "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {"maxOutputTokens": 256, "temperature": 0.8},
+                "generationConfig": {"maxOutputTokens": 512, "temperature": 0.8},
             },
         )
         data = response.json()
