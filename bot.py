@@ -9,7 +9,7 @@ TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
 TELEGRAM_CHANNEL = os.environ["TELEGRAM_CHANNEL"]
 GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 UNSPLASH_ACCESS_KEY = os.environ["UNSPLASH_ACCESS_KEY"]
-TIMEZONE = os.environ.get("TIMEZONE", "Europe/Bucharest")
+TIMEZONE = os.environ.get("TIMEZONE", "Europe/Brussels")
 
 TEME = [
     ("лайфхак", "Полезные лайфхаки для здоровья и долголетия"),
@@ -79,16 +79,15 @@ async def genereaza_postare(tema_tuple: tuple) -> str:
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
 
-    async with httpx.AsyncClient(timeout=30) as client:
+    async with httpx.AsyncClient(timeout=60) as client:
         response = await client.post(
             url,
             json={
                 "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {"maxOutputTokens": 600, "temperature": 0.9},
+                "generationConfig": {"maxOutputTokens": 1024, "temperature": 0.9},
             },
         )
         data = response.json()
-        print(f"Gemini response: {data}")
         if "candidates" not in data:
             raise Exception(f"Gemini error: {data}")
         return data["candidates"][0]["content"]["parts"][0]["text"]
@@ -119,19 +118,16 @@ async def send_to_telegram(text: str, image_url: str | None):
                 json={
                     "chat_id": TELEGRAM_CHANNEL,
                     "photo": image_url,
-                    "caption": text,
-                    
                 },
             )
-        else:
-            await client.post(
-                f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
-                json={
-                    "chat_id": TELEGRAM_CHANNEL,
-                    "text": text,
-                    
-                },
-            )
+        resp = await client.post(
+            f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
+            json={
+                "chat_id": TELEGRAM_CHANNEL,
+                "text": text,
+            },
+        )
+        print(f"Telegram response: {resp.json()}")
 
 
 async def posteaza():
