@@ -74,7 +74,7 @@ async def genereaza_postare(tema_tuple: tuple) -> str:
 
 Пиши только пост. Без markdown. Без звёздочек."""
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key={GEMINI_API_KEY}"
 
     async with httpx.AsyncClient(timeout=60) as client:
         response = await client.post(
