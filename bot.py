@@ -61,33 +61,37 @@ async def genereaza_postare(tema_tuple: tuple) -> str:
         "новости": "🔹 Новости в мире здоровья",
     }.get(tip, "🔸 Здоровье")
 
-    prompt = f"""Напиши Telegram-пост на русском языке на тему: {tema}
+    prompt = f"""Напиши короткий пост для Telegram на русском языке. Тема: {tema}
 
-Формат:
-{tip_formatat}
+Пост состоит ровно из 4 строк:
+Строка 1: {tip_formatat}
+Строка 2: (пустая)
+Строка 3: Три коротких законченных предложения о теме. Каждое предложение заканчивается точкой. Максимум 30 слов.
+Строка 4: (пустая)
+Строка 5: Один практический совет с эмодзи. Заканчивается точкой. Максимум 15 слов.
+Строка 6: (пустая)
+Строка 7: #здоровье #натуропатия #народнаямедицина #ЖивиЗдорово #здоровыйобразжизни
 
-[2-3 предложения с полезной информацией по теме. Каждое предложение заканчивай точкой.]
+Пиши только пост. Без markdown."""
 
-[1 практический совет с эмодзи. Заканчивай точкой.]
-
-#здоровье #натуропатия #народнаямедицина #ЖивиЗдорово #здоровыйобразжизни
-
-Пиши только пост. Без markdown. Без звёздочек."""
-
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key={GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
 
     async with httpx.AsyncClient(timeout=60) as client:
         response = await client.post(
             url,
             json={
                 "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {"maxOutputTokens": 512, "temperature": 0.8},
+                "generationConfig": {
+                    "maxOutputTokens": 300,
+                    "temperature": 0.7,
+                    "stopSequences": []
+                },
             },
         )
         data = response.json()
         if "candidates" not in data:
             raise Exception(f"Gemini error: {data}")
-        text = data["candidates"][0]["content"]["parts"][0]["text"]
+        text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
         if "#здоровье" not in text:
             text += "\n\n#здоровье #натуропатия #народнаямедицина #ЖивиЗдорово #здоровыйобразжизни"
         return text
@@ -136,6 +140,7 @@ async def posteaza():
     print(f"[{datetime.now()}] Generez postare despre: {tema_text}")
     try:
         text = await genereaza_postare(tema_tuple)
+        print(f"Text generat: {text}")
         query = get_unsplash_query(tema_tuple)
         image_url = await get_unsplash_image(query)
         await send_to_telegram(text, image_url)
